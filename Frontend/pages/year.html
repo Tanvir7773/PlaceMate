@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Year Statistics - Placement Information Portal</title>
+    <link rel="stylesheet" href="/static/css/year.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Placement Logo Styles for Year Page */
+        .placement-logo-year {
+            position: absolute;
+            top: 50%;
+            right: -30px;
+            transform: translateY(-50%);
+            width: 250px;
+            height: 160px;
+            z-index: 100;
+        }
+        
+        .placement-logo-year img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="college-logo">
+                <img src="/static/images/bms_logo.svg" alt="BMS College of Engineering Logo" class="college-logo-img">
+            </div>
+            <div class="college-name">
+                <h2>BMS College of Engineering</h2>
+                <p>Placement Information Portal</p>
+            </div>
+        </div>
+        
+        <!-- Placement Logo in Top Right -->
+        <div class="placement-logo-year">
+            <img src="/static/images/placement_logo_1.png" alt="Placement Logo">
+        </div>
+        
+        <!-- Removed header-right with back button -->
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="title-section">
+                <h1 id="yearTitle">Placement Statistics</h1>
+                <p>Detailed placement information for the selected year</p>
+            </div>
+
+            <div class="stats-container">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>No. of Companies Visited</h3>
+                            <p class="stat-number" id="companiesVisited">Loading...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Total No. of Offers</h3>
+                            <p class="stat-number" id="totalOffers">Loading...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Avg. CTC Offered*</h3>
+                            <p class="stat-number" id="avgCTC">Loading...</p>
+                            <small class="note">*Average CTC offered, not college average</small>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Highest CTC Offered</h3>
+                            <p class="stat-number" id="highestCTC">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <h2>Company-wise Placement Details</h2>
+                        <div class="table-actions" id="tableActions" style="display: none;">
+                            <button class="add-company-btn" onclick="showAddCompanyForm()">
+                                <i class="fas fa-plus"></i>
+                                Add Company
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Filter and Sort Controls -->
+                    <div class="filter-sort-controls">
+                        <div class="filter-group">
+                            <label for="sortSelect">Sort by:</label>
+                            <select id="sortSelect" onchange="applySorting()">
+                                <option value="name">Company Name (A-Z)</option>
+                                <option value="ctc">CTC (High to Low)</option>
+                                <option value="date">Date of Visit (Most Recent)</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="branchFilter">Filter by Branch:</label>
+                            <select id="branchFilter" onchange="applyBranchFilter()">
+                                <option value="">All Branches</option>
+                                <option value="AE">Aerospace Engineering</option>
+                                <option value="AI&DS">Artificial Intelligence and Data Science</option>
+                                <option value="BT">Bio-Technology</option>
+                                <option value="ChE">Chemical Engineering</option>
+                                <option value="CE">Civil Engineering</option>
+                                <option value="CSBS">Computer Science and Business Systems</option>
+                                <option value="CSE">Computer Science and Engineering</option>
+                                <option value="CSE(DS)">Computer Science and Engineering (DS)</option>
+                                <option value="CSE(IoT&CS)">Computer Science and Engineering (IoT and CS)</option>
+                                <option value="EEE">Electrical and Electronics Engineering</option>
+                                <option value="ECE">Electronics and Communication Engineering</option>
+                                <option value="EIE">Electronics and Instrumentation Engineering</option>
+                                <option value="ETE">Electronics and Telecommunication Engineering</option>
+                                <option value="IEM">Industrial Engineering and Management</option>
+                                <option value="ISE">Information Science and Engineering</option>
+                                <option value="AI&ML">Machine Learning (AI and ML)</option>
+                                <option value="ME">Mechanical Engineering</option>
+                                <option value="MEE">Medical Electronics Engineering</option>
+                            </select>
+                        </div>
+                        <div class="download-section">
+                            <button class="download-btn" onclick="downloadYearReport()" style="background: linear-gradient(135deg, #5fa8e6 0%, #ff6f91 100%); color: #fff; border: none; border-radius: 8px; padding: 12px 28px; font-size: 1.1rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(30,60,114,0.08);">
+                                <i class="fas fa-download"></i>
+                                Download Report
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-wrapper">
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>S.No.</th>
+                                    <th>Name of the Company</th>
+                                    <th>CTC Offered</th>
+                                    <th>Stipend</th>
+                                    <th>Role</th>
+                                    <th>No. of Offers</th>
+                                    <th>Date of Visit</th>
+                                    <th>Allowed Branches</th>
+                                    <th>Interview Details</th>
+                                    <th id="actionColumn" style="display: none;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="companyTableBody">
+                                <tr>
+                                    <td colspan="10" class="loading">Loading company data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Company Modal -->
+    <div id="addCompanyModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Company</h3>
+                <button class="close-btn" onclick="closeAddCompanyModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addCompanyForm">
+                    <div class="form-group">
+                        <label for="companyName">Company Name *</label>
+                        <input type="text" id="companyName" name="name" required placeholder="Enter company name">
+                    </div>
+                    <div class="form-group">
+                        <label for="companyCTC">CTC Offered (LPA) *</label>
+                        <input type="number" id="companyCTC" name="ctc" placeholder="Enter CTC in LPA" min="0" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="companyStipend">Stipend (KPM - Thousands Per Month)</label>
+                        <input type="number" id="companyStipend" name="stipend" placeholder="Enter stipend in thousands (e.g., 40 for 40K)" min="0" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="companyRole">Role *</label>
+                        <select id="companyRole" name="role" required>
+                            <option value="">Select Role</option>
+                            <option value="IT">IT</option>
+                            <option value="IT + PBC">IT + PBC</option>
+                            <option value="IT + FT">IT + FT</option>
+                            <option value="FT">FT</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="companyOffers">Number of Offers *</label>
+                        <input type="number" id="companyOffers" name="offers" required placeholder="Enter number of offers" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="companyDate">Date of Visit *</label>
+                        <input type="date" id="companyDate" name="date_of_visit" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Allowed Branches *</label>
+                        <div class="branch-checkboxes">
+                            <div class="branch-row">
+                                <label><input type="checkbox" name="allowed_branches" value="AE"> Aerospace Engineering (AE)</label>
+                                <label><input type="checkbox" name="allowed_branches" value="AI&DS"> Artificial Intelligence and Data Science (AI&DS)</label>
+                                <label><input type="checkbox" name="allowed_branches" value="BT"> Bio-Technology (BT)</label>
+                            </div>
+                            <div class="branch-row">
+                                <label><input type="checkbox" name="allowed_branches" value="ChE"> Chemical Engineering (ChE)</label>
+                                <label><input type="checkbox" name="allowed_branches" value="CE"> Civil Engineering (CE)</label>
+                                <label><input type="checkbox" name="allowed_branches" value="CSBS"> Computer Science and Business Systems (CSBS)</label>
+                            </div>
+                            <div class="branch-row">
+                                <label><input type="checkbox" name="allowed_branches" value="CSE"> Computer Science and Engineering (CSE)</label>
+                                <label><input type="checkbox" name="allowed_branches" value="CSE(DS)"> Computer Science and Engineering (DS) (CSE(DS))</label>
+                                <label><input type="checkbox" name="allowed_branches" value="CSE(IoT&CS)"> Computer Science and Engineering (IoT and CS) (CSE(IoT&CS))</label>
+                            </div>
+                            <div class="branch-row">
+                                <label><input type="checkbox" name="allowed_branches" value="EEE"> Electrical and Electronics Engineering (EEE)</label>
+                                <label><input type="checkbox" name="allowed_branches" value="ECE"> Electronics and Communication Engineering (ECE)</label>
+                                <label><input type="checkbox" name="allowed_branches" value="EIE"> Electronics and Instrumentation Engineering (EIE)</label>
+                            </div>
+                            <div class="branch-row">
+                                <label><input type="checkbox" name="allowed_branches" value="ETE"> Electronics and Telecommunication Engineering (ETE)</label>
+                                <label><input type="checkbox" name="allowed_branches" value="IEM"> Industrial Engineering and Management (IEM)</label>
+                                <label><input type="checkbox" name="allowed_branches" value="ISE"> Information Science and Engineering (ISE)</label>
+                            </div>
+                            <div class="branch-row">
+                                <label><input type="checkbox" name="allowed_branches" value="AI&ML"> Machine Learning (AI and ML) (AI&ML)</label>
+                                <label><input type="checkbox" name="allowed_branches" value="ME"> Mechanical Engineering (ME)</label>
+                                <label><input type="checkbox" name="allowed_branches" value="MEE"> Medical Electronics Engineering (MEE)</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="companyDetails">Interview Details</label>
+                        <textarea id="companyDetails" name="interview_details" placeholder="Enter interview process details" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="cancel-btn" onclick="closeAddCompanyModal()">Cancel</button>
+                <button type="button" class="submit-btn" onclick="submitAddCompany()">
+                    <i class="fas fa-plus"></i>
+                    Add Company
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Company Modal -->
+    <div id="editCompanyModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Company</h3>
+                <button class="close-btn" onclick="closeEditCompanyModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editCompanyForm">
+                    <input type="hidden" id="editCompanyId" name="company_id">
+                    <div class="form-group">
+                        <label for="editCompanyName">Company Name *</label>
+                        <input type="text" id="editCompanyName" name="name" required placeholder="Enter company name">
+                    </div>
+                    <div class="form-group">
+                        <label for="editCompanyCTC">CTC Offered (LPA) *</label>
+                        <input type="number" id="editCompanyCTC" name="ctc" placeholder="Enter CTC in LPA" min="0" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="editCompanyStipend">Stipend (KPM - Thousands Per Month)</label>
+                        <input type="number" id="editCompanyStipend" name="stipend" placeholder="Enter stipend in thousands (e.g., 40 for 40K)" min="0" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="editCompanyRole">Role *</label>
+                        <select id="editCompanyRole" name="role" required>
+                            <option value="">Select Role</option>
+                            <option value="IT">IT</option>
+                            <option value="IT + PBC">IT + PBC</option>
+                            <option value="IT + FT">IT + FT</option>
+                            <option value="FT">FT</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editCompanyOffers">Number of Offers *</label>
+                        <input type="number" id="editCompanyOffers" name="offers" required placeholder="Enter number of offers" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="editCompanyDate">Date of Visit *</label>
+                        <input type="date" id="editCompanyDate" name="date_of_visit" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Allowed Branches *</label>
+                        <div class="branch-checkboxes">
+                            <div class="branch-row">
+                                <label><input type="checkbox" name="edit_allowed_branches" value="AE"> Aerospace Engineering (AE)</label>
+                                <label><input type="checkbox" name="edit_allowed_branches" value="AI&DS"> Artificial Intelligence and Data Science (AI&DS)</label>
+                                <label><input type="checkbox" name="edit_allowed_branches" value="BT"> Bio-Technology (BT)</label>
+                            </div>
+                            <div class="branch-row">
+                                <label><input type="checkbox" name="edit_allowed_branches" value="ChE"> Chemical Engineering (ChE)</label>
+                                <label><input type="checkbox" name="edit_allowed_branches" value="CE"> Civil Engineering (CE)</label>
+                                <label><input type="checkbox" name="edit_allowed_branches" value="CSBS"> Computer Science and Business Systems (CSBS)</label>
+                            </div>
+                            <div class="branch-row">
+                                <label><input type="checkbox" name="edit_allowed_branches" value="CSE"> Computer Science and Engineering (CSE)</label>
+                                <label><input type="checkbox" name="edit_allowed_branches" value="CSE(DS)"> Computer Science and Engineering (DS) (CSE(DS))</label>
+                                <label><input type="checkbox" name="edit_allowed_branches" value="CSE(IoT&CS)"> Computer Science and Engineering (IoT and CS) (CSE(IoT&CS))</label>
+                            </div>
+                            <div class="branch-row">
+                                <label><input type="checkbox" name="edit_allowed_branches" value="EEE"> Electrical and Electronics Engineering (EEE)</label>
+                                <label><input type="checkbox" name="edit_allowed_branches" value="ECE"> Electronics and Communication Engineering (ECE)</label>
+                                <label><input type="checkbox" name="edit_allowed_branches" value="EIE"> Electronics and Instrumentation Engineering (EIE)</label>
+                            </div>
+                            <div class="branch-row">
+                                <label><input type="checkbox" name="edit_allowed_branches" value="ETE"> Electronics and Telecommunication Engineering (ETE)</label>
+                                <label><input type="checkbox" name="edit_allowed_branches" value="IEM"> Industrial Engineering and Management (IEM)</label>
+                                <label><input type="checkbox" name="edit_allowed_branches" value="ISE"> Information Science and Engineering (ISE)</label>
+                            </div>
+                            <div class="branch-row">
+                                <label><input type="checkbox" name="edit_allowed_branches" value="AI&ML"> Machine Learning (AI and ML) (AI&ML)</label>
+                                <label><input type="checkbox" name="edit_allowed_branches" value="ME"> Mechanical Engineering (ME)</label>
+                                <label><input type="checkbox" name="edit_allowed_branches" value="MEE"> Medical Electronics Engineering (MEE)</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editCompanyDetails">Interview Details</label>
+                        <textarea id="editCompanyDetails" name="interview_details" placeholder="Enter interview process details" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="cancel-btn" onclick="closeEditCompanyModal()">Cancel</button>
+                <button type="button" class="submit-btn" onclick="submitEditCompany()">
+                    <i class="fas fa-save"></i>
+                    Update Company
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-check-circle success-icon"></i>
+                <h3 id="successTitle">Success!</h3>
+            </div>
+            <div class="modal-body">
+                <p id="successMessage">Operation completed successfully!</p>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal()" class="ok-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-exclamation-circle error-icon"></i>
+                <h3>Error</h3>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage">An error occurred.</p>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal()" class="ok-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-question-circle" style="color: #dc143c; font-size: 24px;"></i>
+                <h3>Confirm Action</h3>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage">Are you sure you want to perform this action?</p>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeConfirmModal()" class="cancel-btn">Cancel</button>
+                <button onclick="confirmAction()" class="delete-btn">
+                    <i class="fas fa-trash"></i>
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interview Details Modal -->
+    <div id="interviewDetailsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-info-circle" style="color: #1e3c72; font-size: 24px;"></i>
+                <h3 id="interviewModalTitle">Interview Details</h3>
+                <button class="close-btn" onclick="closeInterviewDetailsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="interview-details-content">
+                    <div class="company-info">
+                        <h4 id="interviewCompanyName">Company Name</h4>
+                        <p class="company-meta">
+                            <span id="interviewCompanyRole">Role</span> • 
+                            <span id="interviewCompanyCTC">CTC</span> • 
+                            <span id="interviewCompanyOffers">Offers</span>
+                        </p>
+                    </div>
+                    <div class="interview-details-section">
+                        <h5>Interview Process Details</h5>
+                        <div class="details-content" id="interviewDetailsContent">
+                            <p>Loading details...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeInterviewDetailsModal()" class="ok-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/year.js"></script>
+</body>
+</html> 
