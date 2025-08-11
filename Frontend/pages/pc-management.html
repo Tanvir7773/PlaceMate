@@ -30,6 +30,31 @@
             height: 100%;
             object-fit: contain;
         }
+        
+        /* Highlighted Note Styles */
+        .attention-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            margin: 18px 0 12px 0;
+            background: #fff8e1;
+            border: 1px solid #ffe08a;
+            border-left: 6px solid #f59e0b;
+            border-radius: 8px;
+            color: #6b4e00;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+        .attention-note .icon {
+            color: #d97706;
+            font-size: 20px;
+            line-height: 1;
+            margin-top: 2px;
+        }
+        .attention-note .text {
+            font-weight: 600;
+            line-height: 1.35;
+        }
     </style>
 </head>
 <body>
@@ -90,6 +115,10 @@
                 </div>
 
                 <div class="info-card">
+                    <div class="attention-note">
+                        <i class="fas fa-exclamation-triangle icon" aria-hidden="true"></i>
+                        <div class="text">It is the responsibility of the current Placement Coordinator to grant PC access to the next (junior) batch’s Placement Coordinators.</div>
+                    </div>
                     <h3>Instructions</h3>
                     <ul>
                         <li>Only existing Placement Coordinators can grant PC access</li>

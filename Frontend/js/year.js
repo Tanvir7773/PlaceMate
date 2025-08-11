@@ -330,19 +330,19 @@ function renderTable() {
         if (company.role === 'IT') {
             // For IT role, show "-" for CTC if not provided
             ctcDisplay = company.ctc ? `₹${company.ctc} LPA` : '-';
-            stipendDisplay = company.stipend ? `${company.stipend} KPM` : '-';
+            stipendDisplay = (company.stipend || company.stipend === 0) ? `${company.stipend} KPM` : '-';
         } else if (company.role === 'IT + FT') {
             // For IT + FT role, both should be displayed
-            ctcDisplay = company.ctc ? `₹${company.ctc} LPA` : '₹0 LPA';
-            stipendDisplay = company.stipend ? `${company.stipend} KPM` : '-';
+            ctcDisplay = (company.ctc || company.ctc === 0) ? `₹${company.ctc} LPA` : '₹0 LPA';
+            stipendDisplay = (company.stipend || company.stipend === 0) ? `${company.stipend} KPM` : '-';
         } else if (company.role === 'FT') {
             // For FT role, only CTC is relevant
-            ctcDisplay = company.ctc ? `₹${company.ctc} LPA` : '₹0 LPA';
+            ctcDisplay = (company.ctc || company.ctc === 0) ? `₹${company.ctc} LPA` : '₹0 LPA';
             stipendDisplay = '-';
         } else {
             // For other roles (IT + PBC), show both
-            ctcDisplay = company.ctc ? `₹${company.ctc} LPA` : '₹0 LPA';
-            stipendDisplay = company.stipend ? `${company.stipend} KPM` : '-';
+            ctcDisplay = (company.ctc || company.ctc === 0) ? `₹${company.ctc} LPA` : '₹0 LPA';
+            stipendDisplay = (company.stipend || company.stipend === 0) ? `${company.stipend} KPM` : '-';
         }
         
         // Format allowed branches
@@ -354,7 +354,7 @@ function renderTable() {
             <td>${ctcDisplay}</td>
             <td>${stipendDisplay}</td>
             <td>${company.role || 'N/A'}</td>
-            <td>${company.offers || 0}</td>
+            <td>${(company.offers === 0) ? 0 : (company.offers || 0)}</td>
             <td>${formatDate(company.date_of_visit) || 'N/A'}</td>
             <td class="allowed-branches-cell">${allowedBranches}</td>
             <td>
@@ -534,16 +534,16 @@ function showInterviewDetails(companyName, details) {
         
         // Format CTC display
         let ctcText = 'N/A';
-        if (company.ctc) {
-            ctcText = `₹${company.ctc} LPA`;
+    if (company.ctc || company.ctc === 0) {
+        ctcText = `₹${company.ctc} LPA`;
         } else if (company.role === 'IT') {
             ctcText = 'Not applicable for IT role';
         }
         
         // Format stipend display
         let stipendText = 'N/A';
-        if (company.stipend) {
-            stipendText = `${company.stipend} KPM`;
+    if (company.stipend || company.stipend === 0) {
+        stipendText = `${company.stipend} KPM`;
         } else if (company.role === 'FT') {
             stipendText = 'Not applicable for FT role';
         }
@@ -553,7 +553,7 @@ function showInterviewDetails(companyName, details) {
         
         // Add stipend information to the modal if it exists
         const companyMeta = document.getElementById('interviewCompanyCTC');
-        if (company.stipend && company.role !== 'FT') {
+    if ((company.stipend || company.stipend === 0) && company.role !== 'FT') {
             companyMeta.textContent = `${ctcText} • ${stipendText}`;
         } else {
             companyMeta.textContent = ctcText;
@@ -694,9 +694,15 @@ async function submitAddCompany() {
     let finalStipend = stipend;
     
     if (role === 'IT') {
-        finalCtc = null; // Clear CTC for IT role
-    } else if (role === 'FT') {
-        finalStipend = null; // Clear stipend for FT role
+        finalCtc = null; // Not applicable
+    } else {
+        finalCtc = (ctc === '' || ctc === undefined || ctc === null) ? '0' : ctc;
+    }
+    
+    if (role === 'FT') {
+        finalStipend = null; // Not applicable
+    } else {
+        finalStipend = (stipend === '' || stipend === undefined || stipend === null) ? '0' : stipend;
     }
     
     if (!role || role.trim() === '') {
@@ -706,44 +712,59 @@ async function submitAddCompany() {
         // Role-based validation
         if (role === 'IT') {
             // For IT role, only stipend is compulsory
-            if (!finalStipend || finalStipend <= 0) {
+            // For IT role stipend validation
+        const parsedStipend = parseFloat(finalStipend);
+        if (isNaN(parsedStipend) || parsedStipend < 0) {
+            validationErrors.push('Stipend is required for IT role');
+            showFieldError('companyStipend', 'Stipend is required for IT role');
+        }
+        } else if (role === 'IT + PBC') {
+            // For IT + PBC role, both CTC and stipend are compulsory
+        // For IT + PBC role CTC validation
+        const parsedCtc = parseFloat(finalCtc);
+        if (isNaN(parsedCtc) || parsedCtc < 0) {
+            validationErrors.push('CTC is required for IT + PBC role');
+            showFieldError('companyCTC', 'CTC is required for IT + PBC role');
+        }
+            // For IT role stipend validation
+            const parsedStipend = parseFloat(finalStipend);
+            if (isNaN(parsedStipend) || parsedStipend < 0) {
                 validationErrors.push('Stipend is required for IT role');
                 showFieldError('companyStipend', 'Stipend is required for IT role');
             }
-        } else if (role === 'IT + PBC') {
-            // For IT + PBC role, both CTC and stipend are compulsory
-            if (!finalCtc || finalCtc <= 0) {
-                validationErrors.push('CTC is required for IT + PBC role');
-                showFieldError('companyCTC', 'CTC is required for IT + PBC role');
-            }
-            if (!finalStipend || finalStipend <= 0) {
-                validationErrors.push('Stipend is required for IT + PBC role');
-                showFieldError('companyStipend', 'Stipend is required for IT + PBC role');
-            }
         } else if (role === 'FT') {
             // For FT role, only CTC is compulsory
-            if (!finalCtc || finalCtc <= 0) {
-                validationErrors.push('CTC is required for FT role');
-                showFieldError('companyCTC', 'CTC is required for FT role');
-            }
+        // For IT + PBC role CTC validation
+        const parsedCtc = parseFloat(finalCtc);
+        if (isNaN(parsedCtc) || parsedCtc < 0) {
+            validationErrors.push('CTC is required for IT + PBC role');
+            showFieldError('companyCTC', 'CTC is required for IT + PBC role');
+        }
         } else if (role === 'IT + FT') {
             // For IT + FT role, both CTC and stipend are compulsory
-            if (!finalCtc || finalCtc <= 0) {
-                validationErrors.push('CTC is required for IT + FT role');
-                showFieldError('companyCTC', 'CTC is required for IT + FT role');
-            }
-            if (!finalStipend || finalStipend <= 0) {
-                validationErrors.push('Stipend is required for IT + FT role');
-                showFieldError('companyStipend', 'Stipend is required for IT + FT role');
+        // For IT + PBC role CTC validation
+        const parsedCtc = parseFloat(finalCtc);
+        if (isNaN(parsedCtc) || parsedCtc < 0) {
+            validationErrors.push('CTC is required for IT + PBC role');
+            showFieldError('companyCTC', 'CTC is required for IT + PBC role');
+        }
+            // For IT role stipend validation
+            const parsedStipend = parseFloat(finalStipend);
+            if (isNaN(parsedStipend) || parsedStipend < 0) {
+                validationErrors.push('Stipend is required for IT role');
+                showFieldError('companyStipend', 'Stipend is required for IT role');
             }
         }
     }
     
-    const offers = formData.get('offers');
-    if (!offers || offers <= 0) {
-        validationErrors.push('Number of Offers must be greater than 0');
-        showFieldError('companyOffers', 'Number of Offers must be greater than 0');
+    const offersRaw = formData.get('offers');
+    // Offers validation (default empty to 0)
+    const parsedOffers = parseInt((offersRaw === '' || offersRaw === undefined || offersRaw === null) ? '0' : offersRaw, 10);
+    if (isNaN(parsedOffers) || parsedOffers < 0) {
+        validationErrors.push('Number of Offers must be 0 or greater');
+        showFieldError('companyOffers', 'Number of Offers must be 0 or greater');
     }
+
     
     const date = formData.get('date_of_visit');
     if (!date) {
@@ -764,10 +785,11 @@ async function submitAddCompany() {
     
     const companyData = {
         name: name.trim(),
-        ctc: finalCtc ? parseFloat(finalCtc) : null,
-        stipend: finalStipend ? parseFloat(finalStipend) : null,
+        // Preserve 0 values; only send null when field is intentionally unset
+        ctc: (finalCtc === null) ? null : (finalCtc === '' ? null : parseFloat(finalCtc)),
+        stipend: (finalStipend === null) ? null : (finalStipend === '' ? null : parseFloat(finalStipend)),
         role: role.trim(),
-        offers: parseInt(offers),
+        offers: parsedOffers,
         date_of_visit: date,
         interview_details: formData.get('interview_details') || '',
         allowed_branches: getSelectedBranches('add'),
@@ -830,10 +852,10 @@ function editCompany(companyId) {
     // Populate the edit form
     document.getElementById('editCompanyId').value = company._id;
     document.getElementById('editCompanyName').value = company.name || '';
-    document.getElementById('editCompanyCTC').value = company.ctc || '';
-    document.getElementById('editCompanyStipend').value = company.stipend || '';
+    document.getElementById('editCompanyCTC').value = (company.ctc || company.ctc === 0) ? company.ctc : '';
+    document.getElementById('editCompanyStipend').value = (company.stipend || company.stipend === 0) ? company.stipend : '';
     document.getElementById('editCompanyRole').value = company.role || '';
-    document.getElementById('editCompanyOffers').value = company.offers || '';
+    document.getElementById('editCompanyOffers').value = (company.offers === 0) ? 0 : (company.offers || '');
     document.getElementById('editCompanyDate').value = company.date_of_visit || '';
     document.getElementById('editCompanyDetails').value = company.interview_details || '';
     
@@ -984,9 +1006,15 @@ async function submitEditCompany() {
     let finalStipend = stipend;
     
     if (role === 'IT') {
-        finalCtc = null; // Clear CTC for IT role
-    } else if (role === 'FT') {
-        finalStipend = null; // Clear stipend for FT role
+        finalCtc = null; // Not applicable
+    } else {
+        finalCtc = (ctc === '' || ctc === undefined || ctc === null) ? '0' : ctc;
+    }
+    
+    if (role === 'FT') {
+        finalStipend = null; // Not applicable
+    } else {
+        finalStipend = (stipend === '' || stipend === undefined || stipend === null) ? '0' : stipend;
     }
     
     if (!role || role.trim() === '') {
@@ -996,44 +1024,59 @@ async function submitEditCompany() {
         // Role-based validation
         if (role === 'IT') {
             // For IT role, only stipend is compulsory
-            if (!finalStipend || finalStipend <= 0) {
-                validationErrors.push('Stipend is required for IT role');
-                showEditFieldError('editCompanyStipend', 'Stipend is required for IT role');
-            }
+        // For IT role stipend validation
+        const parsedStipend = parseFloat(finalStipend);
+        if (isNaN(parsedStipend) || parsedStipend < 0) {
+            validationErrors.push('Stipend is required for IT role');
+            showFieldError('companyStipend', 'Stipend is required for IT role');
+        }
         } else if (role === 'IT + PBC') {
             // For IT + PBC role, both CTC and stipend are compulsory
-            if (!finalCtc || finalCtc <= 0) {
-                validationErrors.push('CTC is required for IT + PBC role');
-                showEditFieldError('editCompanyCTC', 'CTC is required for IT + PBC role');
-            }
-            if (!finalStipend || finalStipend <= 0) {
-                validationErrors.push('Stipend is required for IT + PBC role');
-                showEditFieldError('editCompanyStipend', 'Stipend is required for IT + PBC role');
-            }
+        // For IT + PBC role CTC validation
+        const parsedCtc = parseFloat(finalCtc);
+        if (isNaN(parsedCtc) || parsedCtc < 0) {
+            validationErrors.push('CTC is required for IT + PBC role');
+            showFieldError('companyCTC', 'CTC is required for IT + PBC role');
+        }
+        // For IT role stipend validation
+        const parsedStipend = parseFloat(finalStipend);
+        if (isNaN(parsedStipend) || parsedStipend < 0) {
+            validationErrors.push('Stipend is required for IT role');
+            showFieldError('companyStipend', 'Stipend is required for IT role');
+        }
         } else if (role === 'FT') {
             // For FT role, only CTC is compulsory
-            if (!finalCtc || finalCtc <= 0) {
-                validationErrors.push('CTC is required for FT role');
-                showEditFieldError('editCompanyCTC', 'CTC is required for FT role');
-            }
+        // For IT + PBC role CTC validation
+        const parsedCtc = parseFloat(finalCtc);
+        if (isNaN(parsedCtc) || parsedCtc < 0) {
+            validationErrors.push('CTC is required for IT + PBC role');
+            showFieldError('companyCTC', 'CTC is required for IT + PBC role');
+        }
         } else if (role === 'IT + FT') {
             // For IT + FT role, both CTC and stipend are compulsory
-            if (!finalCtc || finalCtc <= 0) {
-                validationErrors.push('CTC is required for IT + FT role');
-                showEditFieldError('editCompanyCTC', 'CTC is required for IT + FT role');
-            }
-            if (!finalStipend || finalStipend <= 0) {
-                validationErrors.push('Stipend is required for IT + FT role');
-                showEditFieldError('editCompanyStipend', 'Stipend is required for IT + FT role');
-            }
+        // For IT + PBC role CTC validation
+        const parsedCtc = parseFloat(finalCtc);
+        if (isNaN(parsedCtc) || parsedCtc < 0) {
+            validationErrors.push('CTC is required for IT + PBC role');
+            showFieldError('companyCTC', 'CTC is required for IT + PBC role');
+        }
+        // For IT role stipend validation
+        const parsedStipend = parseFloat(finalStipend);
+        if (isNaN(parsedStipend) || parsedStipend < 0) {
+            validationErrors.push('Stipend is required for IT role');
+            showFieldError('companyStipend', 'Stipend is required for IT role');
+        }
         }
     }
     
-    const offers = formData.get('offers');
-    if (!offers || offers <= 0) {
-        validationErrors.push('Number of Offers must be greater than 0');
-        showEditFieldError('editCompanyOffers', 'Number of Offers must be greater than 0');
+    const offersRaw = formData.get('offers');
+    // Offers validation (default empty to 0)
+    const parsedOffers = parseInt((offersRaw === '' || offersRaw === undefined || offersRaw === null) ? '0' : offersRaw, 10);
+    if (isNaN(parsedOffers) || parsedOffers < 0) {
+        validationErrors.push('Number of Offers must be 0 or greater');
+        showFieldError('companyOffers', 'Number of Offers must be 0 or greater');
     }
+
     
     const date = formData.get('date_of_visit');
     if (!date) {
@@ -1054,10 +1097,11 @@ async function submitEditCompany() {
     
     const companyData = {
         name: name.trim(),
-        ctc: finalCtc ? parseFloat(finalCtc) : null,
-        stipend: finalStipend ? parseFloat(finalStipend) : null,
+        // Preserve 0 values; only send null when field is intentionally unset
+        ctc: (finalCtc === null) ? null : (finalCtc === '' ? null : parseFloat(finalCtc)),
+        stipend: (finalStipend === null) ? null : (finalStipend === '' ? null : parseFloat(finalStipend)),
         role: role.trim(),
-        offers: parseInt(offers),
+        offers: parsedOffers,
         date_of_visit: date,
         interview_details: formData.get('interview_details') || '',
         allowed_branches: getSelectedBranches('edit'),

@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: placemate-backend
+    env: python
+    plan: free
+    buildCommand: pip install -r Backend/requirements.txt
+    startCommand: cd Backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.16
+      - key: MONGO_URL
+        sync: false
+      - key: DB_NAME
+        value: placemate
+      - key: USERS_COLLECTION_NAME
+        value: users
+      - key: COMPANIES_COLLECTION_NAME
+        value: companies
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false 

@@ -104,29 +104,53 @@ async def add_company(company_data: dict):
     Add a new company to the database
     """
     try:
-        # Validate required fields
+        # Validate required fields (treat 0 as valid, only disallow None or empty strings)
         required_fields = ["name", "role", "offers", "date_of_visit", "year"]
         for field in required_fields:
-            if field not in company_data or not company_data[field]:
+            if field not in company_data:
                 raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
-        
-        # Role-based validation for CTC and stipend
+            value = company_data[field]
+            if field == "offers":
+                if value is None:
+                    raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
+            else:
+                if value is None or (isinstance(value, str) and value.strip() == ""):
+                    raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
+
+        # Coerce numeric fields to proper types
+        try:
+            company_data["offers"] = int(company_data.get("offers", 0))
+        except Exception:
+            raise HTTPException(status_code=400, detail="Offers must be an integer")
+
+        if "ctc" in company_data and company_data["ctc"] is not None:
+            try:
+                company_data["ctc"] = float(company_data["ctc"])
+            except Exception:
+                raise HTTPException(status_code=400, detail="CTC must be a number")
+        if "stipend" in company_data and company_data["stipend"] is not None:
+            try:
+                company_data["stipend"] = float(company_data["stipend"])
+            except Exception:
+                raise HTTPException(status_code=400, detail="Stipend must be a number")
+
+        # Role-based validation for CTC and stipend (allow 0; disallow negatives; require not None when applicable)
         role = company_data.get("role")
         ctc = company_data.get("ctc")
         stipend = company_data.get("stipend")
-        
+
         if role == "IT":
-            if not stipend or stipend <= 0:
-                raise HTTPException(status_code=400, detail="Stipend is required for IT role")
+            if stipend is None or stipend < 0:
+                raise HTTPException(status_code=400, detail="Stipend is required for IT role and cannot be negative")
         elif role == "IT + PBC":
-            if not ctc or ctc <= 0:
-                raise HTTPException(status_code=400, detail="CTC is required for IT + PBC role")
-            if not stipend or stipend <= 0:
-                raise HTTPException(status_code=400, detail="Stipend is required for IT + PBC role")
+            if ctc is None or ctc < 0:
+                raise HTTPException(status_code=400, detail="CTC is required for IT + PBC role and cannot be negative")
+            if stipend is None or stipend < 0:
+                raise HTTPException(status_code=400, detail="Stipend is required for IT + PBC role and cannot be negative")
         elif role == "FT":
-            if not ctc or ctc <= 0:
-                raise HTTPException(status_code=400, detail="CTC is required for FT role")
-        
+            if ctc is None or ctc < 0:
+                raise HTTPException(status_code=400, detail="CTC is required for FT role and cannot be negative")
+
         # Add timestamp
         company_data["created_at"] = datetime.utcnow()
         company_data["updated_at"] = datetime.utcnow()
@@ -156,29 +180,53 @@ async def update_company(company_id: str, company_data: dict):
     Update an existing company in the database
     """
     try:
-        # Validate required fields
+        # Validate required fields (treat 0 as valid, only disallow None or empty strings)
         required_fields = ["name", "role", "offers", "date_of_visit", "year"]
         for field in required_fields:
-            if field not in company_data or not company_data[field]:
+            if field not in company_data:
                 raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
-        
-        # Role-based validation for CTC and stipend
+            value = company_data[field]
+            if field == "offers":
+                if value is None:
+                    raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
+            else:
+                if value is None or (isinstance(value, str) and value.strip() == ""):
+                    raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
+
+        # Coerce numeric fields to proper types
+        try:
+            company_data["offers"] = int(company_data.get("offers", 0))
+        except Exception:
+            raise HTTPException(status_code=400, detail="Offers must be an integer")
+
+        if "ctc" in company_data and company_data["ctc"] is not None:
+            try:
+                company_data["ctc"] = float(company_data["ctc"])
+            except Exception:
+                raise HTTPException(status_code=400, detail="CTC must be a number")
+        if "stipend" in company_data and company_data["stipend"] is not None:
+            try:
+                company_data["stipend"] = float(company_data["stipend"])
+            except Exception:
+                raise HTTPException(status_code=400, detail="Stipend must be a number")
+
+        # Role-based validation for CTC and stipend (allow 0; disallow negatives; require not None when applicable)
         role = company_data.get("role")
         ctc = company_data.get("ctc")
         stipend = company_data.get("stipend")
-        
+
         if role == "IT":
-            if not stipend or stipend <= 0:
-                raise HTTPException(status_code=400, detail="Stipend is required for IT role")
+            if stipend is None or stipend < 0:
+                raise HTTPException(status_code=400, detail="Stipend is required for IT role and cannot be negative")
         elif role == "IT + PBC":
-            if not ctc or ctc <= 0:
-                raise HTTPException(status_code=400, detail="CTC is required for IT + PBC role")
-            if not stipend or stipend <= 0:
-                raise HTTPException(status_code=400, detail="Stipend is required for IT + PBC role")
+            if ctc is None or ctc < 0:
+                raise HTTPException(status_code=400, detail="CTC is required for IT + PBC role and cannot be negative")
+            if stipend is None or stipend < 0:
+                raise HTTPException(status_code=400, detail="Stipend is required for IT + PBC role and cannot be negative")
         elif role == "FT":
-            if not ctc or ctc <= 0:
-                raise HTTPException(status_code=400, detail="CTC is required for FT role")
-        
+            if ctc is None or ctc < 0:
+                raise HTTPException(status_code=400, detail="CTC is required for FT role and cannot be negative")
+
         # Validate ObjectId format
         try:
             object_id = ObjectId(company_id)
